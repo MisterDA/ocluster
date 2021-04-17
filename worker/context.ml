@@ -147,11 +147,46 @@ let build_context t ~log ~tmpdir descr =
         )
       )
 
+let win32_unlink fn =
+  try Lwt_unix.unlink fn with
+  | Unix.Unix_error (Unix.EACCES, _, _) as e -> (
+    try
+      (* Try removing the read-only attribute *)
+      Lwt_unix.chmod fn 0o666 >>= fun () ->
+      Lwt_unix.unlink fn
+    with
+    | _ -> raise e)
+
+let unlink =
+  if Sys.win32 then
+    win32_unlink
+  else
+    Lwt_unix.unlink
+
+let rec delete_recursively directory =
+  Lwt_unix.files_of_directory directory
+  |> Lwt_stream.iter_s begin fun entry ->
+       if entry = Filename.current_dir_name ||
+            entry = Filename.parent_dir_name then
+         Lwt.return ()
+       else
+         let path = Filename.concat directory entry in
+         Lwt_unix.lstat path >>= fun stat ->
+         if stat.Lwt_unix.st_kind = Lwt_unix.S_DIR then
+           delete_recursively path
+         else
+           unlink path
+       end >>= fun () ->
+  Lwt_unix.rmdir directory
+
 let with_build_context t ~log descr fn =
-  let tmp = get_tmp_dir t in
-  Lwt_io.with_temp_dir ~parent:tmp ~prefix:"build-context-" @@ fun tmpdir ->
-  build_context t ~log ~tmpdir descr >>!= fun () ->
-  fn tmpdir
+  Lwt_io.create_temp_dir ~parent:(get_tmp_dir t) ~prefix:"build-context-" () >>= fun tmpdir ->
+  Lwt.finalize
+    (fun () ->
+      build_context t ~log ~tmpdir descr >>!= fun () ->
+      fn tmpdir)
+    (fun () ->
+      delete_recursively tmpdir)
 
 let v ~state_dir =
   ensure_dir state_dir;
