@@ -31,6 +31,7 @@
   capnp-rpc-lwt
   capnp-rpc-net
   (capnp-rpc-unix (>= 0.9.0))
+  (extunix (> 0.3.1))
   logs
   fmt
   (conf-libev (<> :os "win32"))
