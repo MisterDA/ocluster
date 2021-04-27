@@ -1,5 +1,38 @@
+(library
+ (name shared)
+ (modules Logging Options Version)
+ (wrapped false)
+ (libraries astring dune-build-info logs.fmt fmt.tty capnp-rpc-unix))
+
 (executables
- (public_names ocluster-scheduler ocluster-client ocluster-worker ocluster-admin)
+ (public_names ocluster-client ocluster-admin)
  (package ocluster)
- (names scheduler client worker admin)
- (libraries dune-build-info ocluster-api logs.fmt fmt.tty capnp-rpc-unix cluster_scheduler cluster_worker prometheus-app.unix db))
+ (names client admin)
+ (modules Client Admin)
+ (libraries ocluster-api shared))
+
+(library
+ (name worker)
+ (modules Worker)
+ (libraries cluster_worker prometheus-app.unix shared))
+
+(library
+ (name scheduler)
+ (modules Scheduler)
+ (libraries cluster_scheduler prometheus-app.unix shared))
+
+(executables
+ (public_names ocluster-scheduler ocluster-worker)
+ (package ocluster)
+ (names scheduler_unix worker_unix)
+ (modules Scheduler_unix Worker_unix)
+ (libraries cmdliner worker scheduler)
+ (enabled_if (<> %{os_type} "Win32")))
+
+(executables
+ (public_names ocluster-scheduler ocluster-worker)
+ (package ocluster)
+ (names scheduler_windows worker_windows)
+ (modules Scheduler_windows Worker_windows)
+ (libraries cmdliner worker scheduler winsvc)
+ (enabled_if (= %{os_type} "Win32")))
