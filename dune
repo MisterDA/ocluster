@@ -1,2 +1,2 @@
 (dirs :standard \ var)
-(vendored_dirs obuilder)
+(vendored_dirs obuilder extunix ocaml-winsvc)

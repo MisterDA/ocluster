@@ -1,3 +1,7 @@
 [submodule "obuilder"]
 	path = obuilder
 	url = https://github.com/ocurrent/obuilder.git
+[submodule "ocaml-winsvc"]
+	path = ocaml-winsvc
+	url = https://github.com/MisterDA/ocaml-winsvc.git
+	branch = changes
