@@ -34,9 +34,10 @@ let main {capnp; secrets_dir; pools; prometheus_config; state_dir; default_clien
     Svc.run @@ fun () ->
       (* Services don't have access to stdout and stderr. Short-circuit any
         output here until we're sure that Logging doesn't use them. *)
-      let sink = open_out_bin Filename.null in
-      Unix.(dup2 (descr_of_out_channel sink) stderr;
-            dup2 (descr_of_out_channel sink) stdout);
+      let out = open_out_bin {|C:\Users\antonin\Tarides\scheduler.out|} in
+      let err = open_out_bin {|C:\Users\antonin\Tarides\scheduler.err|} in
+      Unix.(dup2 (descr_of_out_channel out) stderr;
+            dup2 (descr_of_out_channel err) stdout);
       Scheduler.main capnp secrets_dir pools prometheus_config state_dir default_clients
   with
   | Failure _ ->

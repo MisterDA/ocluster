@@ -36,9 +36,10 @@ let main {registration_path; capacity; name; allow_push; prune_threshold; state_
     Svc.run @@ fun () ->
       (* Services don't have access to stdout and stderr. Short-circuit any
         output here until we're sure that Logging doesn't use them. *)
-      let sink = open_out_bin Filename.null in
-      Unix.(dup2 (descr_of_out_channel sink) stderr;
-            dup2 (descr_of_out_channel sink) stdout);
+      let out = open_out_bin {|C:\Users\antonin\Tarides\worker.out|} in
+      let err = open_out_bin {|C:\Users\antonin\Tarides\worker.err|} in
+      Unix.(dup2 (descr_of_out_channel out) stderr;
+            dup2 (descr_of_out_channel err) stdout);
       Worker.main registration_path capacity name allow_push prune_threshold state_dir obuilder
   with
   | Failure _ ->
